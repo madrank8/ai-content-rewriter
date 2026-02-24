@@ -13,6 +13,10 @@
     "./browser": {
       "types": "./lib/browser.d.ts",
       "import": "./lib/browser.js"
+    },
+    "./wordpress": {
+      "types": "./lib/wordpress.d.ts",
+      "import": "./lib/wordpress.js"
     }
   },
   "files": [
@@ -32,7 +36,8 @@
     "copywriting",
     "seo",
     "affiliate",
-    "marketing"
+    "marketing",
+    "wordpress"
   ],
   "author": "Affiliate.FM",
   "license": "MIT",

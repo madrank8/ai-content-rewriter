@@ -182,3 +182,124 @@ export class RateLimitError extends ProviderError {
     this.name = "RateLimitError";
   }
 }
+
+export class WordPressError extends RewriterError {
+  constructor(
+    message: string,
+    public readonly statusCode?: number,
+    details?: unknown
+  ) {
+    super(message, "WORDPRESS_ERROR", details);
+    this.name = "WordPressError";
+  }
+}
+
+// =============================================================================
+// WORDPRESS TYPES
+// =============================================================================
+
+/** WordPress site connection configuration */
+export interface WordPressConfig {
+  /** WordPress site URL (e.g., "https://example.com") */
+  siteUrl: string;
+  /** WordPress username */
+  username: string;
+  /** WordPress Application Password (generate in Users → Profile → Application Passwords) */
+  applicationPassword: string;
+}
+
+/** WordPress post/page type identifier */
+export type WordPressPostType = "posts" | "pages";
+
+/** WordPress post status */
+export type WordPressPostStatus =
+  | "publish"
+  | "draft"
+  | "pending"
+  | "private"
+  | "future"
+  | "trash";
+
+/** WordPress post as returned by the REST API */
+export interface WordPressPost {
+  id: number;
+  date: string;
+  date_gmt: string;
+  modified: string;
+  modified_gmt: string;
+  slug: string;
+  status: WordPressPostStatus;
+  type: string;
+  link: string;
+  title: { rendered: string };
+  content: { rendered: string; protected: boolean };
+  excerpt: { rendered: string; protected: boolean };
+  author: number;
+  featured_media: number;
+  categories?: number[];
+  tags?: number[];
+}
+
+/** Options for listing WordPress posts/pages */
+export interface WordPressListOptions {
+  /** Post type to list (default: "posts") */
+  type?: WordPressPostType;
+  /** Filter by status (default: "publish") */
+  status?: WordPressPostStatus | "any";
+  /** Number of results per page (1-100, default: 10) */
+  perPage?: number;
+  /** Page number (default: 1) */
+  page?: number;
+  /** Search term to filter posts */
+  search?: string;
+  /** Field to order results by */
+  orderBy?: "date" | "title" | "id" | "modified" | "slug";
+  /** Sort direction */
+  order?: "asc" | "desc";
+}
+
+/** Options for rewriting a WordPress post */
+export interface WordPressRewriteOptions extends RewriteCallOptions {
+  /** Post type (default: "posts") */
+  type?: WordPressPostType;
+  /** Update the original post with rewritten content (default: false) */
+  updatePost?: boolean;
+  /** Create a new draft with the rewritten content instead of updating (default: false) */
+  createDraft?: boolean;
+  /** Rewrite the post title (default: true) */
+  rewriteTitle?: boolean;
+  /** Rewrite the excerpt/meta description (default: true) */
+  rewriteExcerpt?: boolean;
+}
+
+/** Result of a WordPress post rewrite operation */
+export interface WordPressRewriteResult {
+  /** Original post ID */
+  postId: number;
+  /** Original post title */
+  originalTitle: string;
+  /** The rewrite result (content, title, description, cost) */
+  rewriteResult: RewriteResult;
+  /** Whether the original post was updated in WordPress */
+  updated: boolean;
+  /** ID of the new draft post, if createDraft was true */
+  newPostId?: number;
+}
+
+/** Progress callback for batch WordPress operations */
+export interface WordPressBatchProgress {
+  /** Current post being processed (1-based) */
+  currentPost: number;
+  /** Total posts to process */
+  totalPosts: number;
+  /** ID of the post being processed */
+  postId: number;
+  /** Title of the post being processed */
+  postTitle: string;
+  /** Rewrite progress for the current post (if available) */
+  rewriteProgress?: RewriteProgress;
+}
+
+export type WordPressBatchProgressCallback = (
+  progress: WordPressBatchProgress
+) => void;

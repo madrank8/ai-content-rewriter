@@ -25,6 +25,9 @@
 // Main class export
 export { ContentRewriter } from "./rewriter.js";
 
+// WordPress integration
+export { WordPressRewriter } from "./wordpress.js";
+
 // Types
 export type {
   // Constructor options
@@ -43,6 +46,16 @@ export type {
   ProgressCallback,
   StreamingResult,
   StreamingCallback,
+  // WordPress types
+  WordPressConfig,
+  WordPressPost,
+  WordPressPostType,
+  WordPressPostStatus,
+  WordPressListOptions,
+  WordPressRewriteOptions,
+  WordPressRewriteResult,
+  WordPressBatchProgress,
+  WordPressBatchProgressCallback,
 } from "./types.js";
 
 // Errors
@@ -51,6 +64,7 @@ export {
   ProviderError,
   ValidationError,
   RateLimitError,
+  WordPressError,
 } from "./types.js";
 
 // Constants
