@@ -48,10 +48,12 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "openai": "^4.73.0"
+    "openai": "^4.73.0",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
+    "@types/ws": "^8.18.1",
     "typescript": "^5.7.2"
   }
 }

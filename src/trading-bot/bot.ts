@@ -40,10 +40,13 @@ export class TradingBot {
 
     // Initialize components
     this.polyClient = new PolymarketClient(config.polymarket, this.logger);
-    this.oddsAggregator = new OddsAggregator(config.oddsApiKey, this.logger);
+    const oddsApiKey = config.odds.theOddsApi?.apiKey ?? '';
+    this.oddsAggregator = new OddsAggregator(oddsApiKey, this.logger);
+    const anthropicKey = config.ai.anthropic?.apiKey ?? '';
+    const claudeModel = config.ai.anthropic?.model ?? 'claude-sonnet-4-6';
     this.claudeAnalyzer = new ClaudeAnalyzer(
-      config.anthropicApiKey,
-      config.claudeModel,
+      anthropicKey,
+      claudeModel,
       this.logger
     );
     this.riskManager = new RiskManager(config.trading, this.logger);
@@ -85,7 +88,7 @@ export class TradingBot {
       kellyFraction: this.config.trading.kellyFraction,
       minEdge: `${this.config.trading.minEdgePercent}%`,
       scanInterval: `${this.config.trading.scanIntervalMs / 1000}s`,
-      model: this.config.claudeModel,
+      model: this.config.ai.anthropic?.model ?? 'claude-sonnet-4-6',
     });
 
     this.emit({ type: 'status', message: 'Bot started' });

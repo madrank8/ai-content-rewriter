@@ -11,6 +11,7 @@ import type {
   TradeRecord,
   Position,
   TradingConfig,
+  HeatLevel,
 } from './types.js';
 import { DEFAULT_RISK_LIMITS } from './config.js';
 import { Logger } from './logger.js';
@@ -80,6 +81,9 @@ export class RiskManager {
     const currentExposure = this.getMarketExposure(opportunity.polymarketMarket.id, positions);
     const maxMarketExposure = this.config.totalBudget * (this.config.maxMarketExposurePercent / 100);
     positionSize = Math.min(positionSize, maxMarketExposure - currentExposure);
+
+    // Apply heat level multiplier (4-level drawdown system)
+    positionSize *= this.getHeatMultiplier();
 
     // Minimum viable trade
     if (positionSize < 1) return 0;
@@ -159,7 +163,7 @@ export class RiskManager {
   // ─── Portfolio Metrics ──────────────────────────────────────
 
   /**
-   * Calculate current risk metrics
+   * Calculate current risk metrics with 4-level heat system
    */
   getMetrics(positions: Position[]): RiskMetrics {
     this.resetDailyCountersIfNeeded();
@@ -185,7 +189,35 @@ export class RiskManager {
       positionCount: positions.length,
       dailyPnl: this.dailyPnl,
       dailyTradeCount: this.dailyTradeCount,
+      heatLevel: this.getHeatLevel(),
     };
+  }
+
+  /**
+   * 4-level heat system for position sizing adjustment
+   * Normal (<10% DD) = full sizing
+   * Warning (>=10%) = half sizing
+   * Critical (>=15%) = quarter sizing
+   * Max (>=20%) = halt trading
+   */
+  getHeatLevel(): HeatLevel {
+    const dd = this.getCurrentDrawdown();
+    if (dd >= this.limits.stopTradingDrawdownPercent) return 'max';
+    if (dd >= this.limits.criticalDrawdownPercent) return 'critical';
+    if (dd >= this.limits.warningDrawdownPercent) return 'warning';
+    return 'normal';
+  }
+
+  /**
+   * Get position size multiplier based on heat level
+   */
+  getHeatMultiplier(): number {
+    switch (this.getHeatLevel()) {
+      case 'normal': return 1.0;
+      case 'warning': return 0.5;
+      case 'critical': return 0.25;
+      case 'max': return 0;
+    }
   }
 
   // ─── Trade Recording ────────────────────────────────────────

@@ -76,7 +76,7 @@ export class Executor {
       side: 'BUY',
       price,
       size: shares,
-      type: 'LIMIT',
+      orderType: 'GTC',
     };
 
     const tradeId = `trade_${++this.tradeCounter}_${Date.now()}`;

@@ -10,6 +10,7 @@ import type {
   OrderBook,
   OrderBookEntry,
   PolymarketOrder,
+  PolymarketOrderType,
   Position,
 } from './types.js';
 import { Logger } from './logger.js';
@@ -174,7 +175,8 @@ export class PolymarketClient {
   // ─── Order Management ───────────────────────────────────────
 
   /**
-   * Place a limit order on the CLOB
+   * Place an order on the CLOB with proper order type support
+   * Supports GTC, GTD, FOK, FAK order types
    */
   async placeOrder(order: PolymarketOrder): Promise<PolymarketOrder> {
     this.logger.info('Placing order', {
@@ -182,15 +184,29 @@ export class PolymarketClient {
       side: order.side,
       price: order.price,
       size: order.size,
+      orderType: order.orderType,
+      postOnly: order.postOnly,
     });
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       tokenID: order.tokenId,
       price: order.price,
       size: order.size,
       side: order.side,
-      type: order.type,
+      orderType: order.orderType ?? 'GTC',
     };
+
+    // GTD orders need an expiration timestamp
+    if (order.orderType === 'GTD' && order.expiration) {
+      payload['expiration'] = order.expiration;
+    }
+
+    // Tick size and neg_risk are required for proper order creation
+    if (order.tickSize) payload['tickSize'] = order.tickSize;
+    if (order.negRisk !== undefined) payload['negRisk'] = order.negRisk;
+
+    // Post-only flag for market making (rejected if it would cross spread)
+    if (order.postOnly) payload['postOnly'] = true;
 
     const result = await this.clobPost<{ orderID: string; status: string }>('/order', payload);
 
@@ -200,6 +216,22 @@ export class PolymarketClient {
       status: 'PENDING',
       createdAt: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Get tick size for a market (required for order creation)
+   */
+  async getTickSize(tokenId: string): Promise<string> {
+    const data = await this.clobGet<{ minimum_tick_size: string }>(`/tick-size?token_id=${tokenId}`);
+    return data.minimum_tick_size ?? '0.01';
+  }
+
+  /**
+   * Check if a market uses the negative risk model
+   */
+  async getNegRisk(tokenId: string): Promise<boolean> {
+    const data = await this.clobGet<{ neg_risk: boolean }>(`/neg-risk?token_id=${tokenId}`);
+    return data.neg_risk ?? false;
   }
 
   /**
