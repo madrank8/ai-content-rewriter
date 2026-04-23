@@ -5,9 +5,16 @@
         "source": "directory",
         "path": "./.claude/plugins/karpathy-skills"
       }
+    },
+    "nowork-studio": {
+      "source": {
+        "source": "directory",
+        "path": "./.claude/plugins/toprank"
+      }
     }
   },
   "enabledPlugins": {
-    "andrej-karpathy-skills@karpathy-skills": true
+    "andrej-karpathy-skills@karpathy-skills": true,
+    "toprank@nowork-studio": true
   }
 }
